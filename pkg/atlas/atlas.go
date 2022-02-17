@@ -25,9 +25,6 @@ func Load(r io.Reader) (map[string]Frame, error) {
 		} `xml:"SubTexture"`
 	}{}
 	err := xml.NewDecoder(r).Decode(&t)
-	if err != nil {
-		return nil, err
-	}
 	ret := map[string]Frame{}
 	for _, f := range t.SubTextures {
 		ret[f.Name] = Frame{X: f.X, Y: f.Y, Width: f.Width, Height: f.Height}
