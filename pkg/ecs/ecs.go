@@ -55,7 +55,7 @@ func (w *World) getAvailableEntityId() (EntityId, bool) {
 }
 
 func (w *World) updateComponent_AddEntity(e EntityId, cs map[ComponentKind]interface{}) {
-	bucket = map[ComponentType]Component{}
+	bucket := map[ComponentKind]interface{}{}
 	for k, c := range cs {
 		bucket[k] = c
 	}
@@ -81,26 +81,36 @@ func (w *World) RemoveEntity(e EntityId) {
 }
 
 func (w *World) updateSystem_RemoveEntity(e EntityId) {
-	for id := range s.systems {
+	for id := range w.systems {
 		sId := SystemId(id)
 		w.entitiesBySystem[sId] = remove(w.entitiesBySystem[sId], e)
 	}
 }
 
-func remove(s []EntityId, i EntityId) []EntityId {
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
+func remove(s []EntityId, eId EntityId) []EntityId {
+	found := false
+	for i, e := range s {
+		if e == eId {
+			s[i] = s[len(s)-1]
+			found = true
+			break
+		}
+	}
+	if found {
+		return s[:len(s)-1]
+	}
+	return s
 }
 
 func (w *World) AddSystem(s System) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 
-	sId := len(w.systems)
+	sId := SystemId(len(w.systems))
 	w.systems = append(w.systems, s)
 	for entityId, cmpts := range w.components {
 		if s.MatchKinds(cmpts) {
-			w.entitiesBySystem[sId] = append(w.entitiesBySystem[sId], e)
+			w.entitiesBySystem[sId] = append(w.entitiesBySystem[sId], entityId)
 		}
 	}
 }
@@ -109,9 +119,9 @@ func (w *World) Update() {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 
-	for s, entities := range w.entitiesBySystem {
+	for sId, entities := range w.entitiesBySystem {
 		for _, e := range entities {
-			s.Update(s.components[e])
+			w.systems[int(sId)].Update(w.components[e])
 		}
 	}
 }
