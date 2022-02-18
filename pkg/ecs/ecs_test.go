@@ -10,15 +10,15 @@ type fakeSystem struct {
 	UpdateTrace             []string
 }
 
-func (f *fakeSystem) MatchKinds(cmpts map[ComponentKind]interface{}) bool {
-	return len(cmpts) > f.MatchOnCountGreaterThan
+func (f *fakeSystem) Match(e Entity) bool {
+	return len(e) > f.MatchOnCountGreaterThan
 }
-func (f *fakeSystem) Update(cmpts map[ComponentKind]interface{}) {
-	f.UpdateTrace = append(f.UpdateTrace, fmt.Sprintf("<%v>", cmpts))
+func (f *fakeSystem) Update(e Entity) {
+	f.UpdateTrace = append(f.UpdateTrace, fmt.Sprintf("<%v>", e))
 }
 
-func buildCmpt(count int) map[ComponentKind]interface{} {
-	out := map[ComponentKind]interface{}{}
+func buildCmpt(count int) Entity {
+	out := Entity{}
 	for i := 0; i < count; i++ {
 		out[ComponentKind(fmt.Sprintf("cmpt%d", i))] = struct{}{}
 	}
@@ -227,11 +227,11 @@ func testWorld(t *testing.T, w *World, expected ExpectWorld) {
 		t.Fatalf("len(w.systems) should be equal to %d got %d", expected.LenForSystems, len(w.systems))
 	}
 
-	if expected.LenForComponents != len(w.components) {
-		t.Fatalf("len(w.components) should be equal to %d got %d", expected.LenForComponents, len(w.components))
+	if expected.LenForComponents != len(w.entities) {
+		t.Fatalf("len(w.entities) should be equal to %d got %d", expected.LenForComponents, len(w.entities))
 	}
 
-	for e, cmpts := range w.components {
+	for e, cmpts := range w.entities {
 		if expected.LenForComponentsOfEntity[e] != len(cmpts) {
 			t.Fatalf("len(cmpts) should be equal to %d got %d", expected.LenForComponentsOfEntity, len(cmpts))
 		}
