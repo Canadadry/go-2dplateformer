@@ -7,14 +7,17 @@ import (
 
 type fakeSystem struct {
 	MatchOnCountGreaterThan int
-	UpdateTrace             []string
+	Trace                   []string
 }
 
 func (f *fakeSystem) Match(e Entity) bool {
 	return len(e) > f.MatchOnCountGreaterThan
 }
 func (f *fakeSystem) Update(e Entity) {
-	f.UpdateTrace = append(f.UpdateTrace, fmt.Sprintf("<%v>", e))
+	f.Trace = append(f.Trace, fmt.Sprintf("update <%v>", e))
+}
+func (f *fakeSystem) Draw(e Entity) {
+	f.Trace = append(f.Trace, fmt.Sprintf("draw <%v>", e))
 }
 
 func buildCmpt(count int) Entity {
@@ -186,11 +189,31 @@ func TestWorldUpdate_WithFakeSystem_AddThreeAndRemoveSecondAndReAddOne_ButSystem
 	w.Update()
 
 	expected := []string{
-		"<map[cmpt0:{} cmpt1:{}]>",
-		"<map[cmpt0:{} cmpt1:{} cmpt2:{}]>",
+		"update <map[cmpt0:{} cmpt1:{}]>",
+		"update <map[cmpt0:{} cmpt1:{} cmpt2:{}]>",
 	}
 	expectedStr := fmt.Sprintf("%v", expected)
-	resultStr := fmt.Sprintf("%v", s.UpdateTrace)
+	resultStr := fmt.Sprintf("%v", s.Trace)
+	if resultStr != expectedStr {
+		t.Fatalf("s.UpdateTrace \nexp %s\ngot %s\n", expectedStr, resultStr)
+	}
+}
+
+func TestWorldDraw_WithFakeSystem_AddThreeAndRemoveSecondAndReAddOne_ButSystemIsAddedAfter(t *testing.T) {
+	s := (&fakeSystem{MatchOnCountGreaterThan: 1})
+	w := New()
+	w.AddEntity(buildCmpt(1))
+	w.AddEntity(buildCmpt(2))
+	w.AddEntity(buildCmpt(3))
+	w.AddSystem(s)
+	w.Draw()
+
+	expected := []string{
+		"draw <map[cmpt0:{} cmpt1:{}]>",
+		"draw <map[cmpt0:{} cmpt1:{} cmpt2:{}]>",
+	}
+	expectedStr := fmt.Sprintf("%v", expected)
+	resultStr := fmt.Sprintf("%v", s.Trace)
 	if resultStr != expectedStr {
 		t.Fatalf("s.UpdateTrace \nexp %s\ngot %s\n", expectedStr, resultStr)
 	}
