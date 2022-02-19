@@ -16,7 +16,7 @@ func (f *fakeSystem) Match(e Entity) bool {
 func (f *fakeSystem) Update(e Entity) {
 	f.Trace = append(f.Trace, fmt.Sprintf("update <%v>", e))
 }
-func (f *fakeSystem) Draw(e Entity) {
+func (f *fakeSystem) Draw(e Entity, s interface{}) {
 	f.Trace = append(f.Trace, fmt.Sprintf("draw <%v>", e))
 }
 
@@ -206,7 +206,7 @@ func TestWorldDraw_WithFakeSystem_AddThreeAndRemoveSecondAndReAddOne_ButSystemIs
 	w.AddEntity(buildCmpt(2))
 	w.AddEntity(buildCmpt(3))
 	w.AddSystem(s)
-	w.Draw()
+	w.Draw(nil)
 
 	expected := []string{
 		"draw <map[cmpt0:{} cmpt1:{}]>",

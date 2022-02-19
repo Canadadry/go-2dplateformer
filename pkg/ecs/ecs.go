@@ -14,7 +14,7 @@ type EntityId int
 type System interface {
 	Match(Entity) bool
 	Update(Entity)
-	Draw(Entity)
+	Draw(Entity, interface{})
 }
 
 type World struct {
@@ -121,14 +121,14 @@ func (w *World) Update() {
 	}
 }
 
-func (w *World) Draw() {
+func (w *World) Draw(screen interface{}) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 
 	for i, s := range w.systems {
 		entities, _ := w.entitiesBySystem[SystemId(i)]
 		for _, e := range entities {
-			s.Draw(w.entities[e])
+			s.Draw(w.entities[e], screen)
 		}
 	}
 }

@@ -52,7 +52,6 @@ func run() error {
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Animation (Ebiten Demo)")
 	game := &Game{
-		atlas: a,
 		world: ecs.New(),
 	}
 	game.world.AddSystem(&Painter{Game: game})
@@ -62,6 +61,7 @@ func run() error {
 			FrameDuration: 5,
 			X:             -30.0,
 			Y:             -30.0,
+			Atlas:         a,
 		},
 	})
 	game.world.AddEntity(map[ecs.ComponentKind]interface{}{
@@ -70,6 +70,7 @@ func run() error {
 			FrameDuration: 20,
 			X:             30.0,
 			Y:             30.0,
+			Atlas:         a,
 		},
 	})
 	return ebiten.RunGame(game)
@@ -85,6 +86,7 @@ type Paintable struct {
 	Count         int
 	Frames        []string
 	FrameDuration int
+	Atlas         map[string]atlas.Frame
 }
 
 type Painter struct {
@@ -101,10 +103,10 @@ func (p *Painter) Update(e ecs.Entity) {
 	cmpt.Count++
 }
 
-func (p *Painter) Draw(e ecs.Entity) {
+func (p *Painter) Draw(e ecs.Entity, screen interface{}) {
 	cmpt := e[ComponentKindPaintable].(*Paintable)
 	i := (cmpt.Count / cmpt.FrameDuration) % len(cmpt.Frames)
-	frame := p.Game.atlas[cmpt.Frames[i]]
+	frame := cmpt.Atlas[cmpt.Frames[i]]
 	rect := image.Rect(frame.X, frame.Y, frame.X+frame.Width, frame.Y+frame.Height)
 	subImg := runnerImage.SubImage(rect).(*ebiten.Image)
 	op := &ebiten.DrawImageOptions{}
@@ -112,13 +114,11 @@ func (p *Painter) Draw(e ecs.Entity) {
 	op.GeoM.Scale(0.25, 0.25)
 	op.GeoM.Translate(screenWidth/2, screenHeight/2)
 	op.GeoM.Translate(cmpt.X, cmpt.Y)
-	p.Game.Screen.DrawImage(subImg, op)
+	screen.(*ebiten.Image).DrawImage(subImg, op)
 }
 
 type Game struct {
-	atlas  map[string]atlas.Frame
-	Screen *ebiten.Image
-	world  *ecs.World
+	world *ecs.World
 }
 
 func (g *Game) Update() error {
@@ -127,8 +127,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.Screen = screen
-	g.world.Draw()
+	g.world.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
