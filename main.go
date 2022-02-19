@@ -60,6 +60,16 @@ func run() error {
 		ComponentKindPaintable: &Paintable{
 			Frames:        []string{"alienBeige_walk1", "alienBeige_walk2"},
 			FrameDuration: 5,
+			X:             -30.0,
+			Y:             -30.0,
+		},
+	})
+	game.world.AddEntity(map[ecs.ComponentKind]interface{}{
+		ComponentKindPaintable: &Paintable{
+			Frames:        []string{"alienBlue_swim1", "alienBlue_swim2"},
+			FrameDuration: 20,
+			X:             30.0,
+			Y:             30.0,
 		},
 	})
 	return ebiten.RunGame(game)
@@ -70,6 +80,8 @@ const (
 )
 
 type Paintable struct {
+	X             float64
+	Y             float64
 	Count         int
 	Frames        []string
 	FrameDuration int
@@ -97,8 +109,9 @@ func (p *Painter) Draw(e ecs.Entity) {
 	subImg := runnerImage.SubImage(rect).(*ebiten.Image)
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-float64(frame.Width)/2, -float64(frame.Height)/2)
-	op.GeoM.Translate(screenWidth/2, screenHeight/2)
 	op.GeoM.Scale(0.25, 0.25)
+	op.GeoM.Translate(screenWidth/2, screenHeight/2)
+	op.GeoM.Translate(cmpt.X, cmpt.Y)
 	p.Game.Screen.DrawImage(subImg, op)
 }
 
